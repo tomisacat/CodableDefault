@@ -15,7 +15,7 @@ API responses often omit keys or send `null` for optional configuration fields. 
 | iOS | 13+ |
 | macOS | 10.15+ (required to build and run macro tooling) |
 
-Dependencies are pinned via [Package.resolved](Package.resolved) (`swift-syntax` 602.x).
+Dependencies are pinned via [Package.resolved](Package.resolved) (`swift-syntax` 602.x, up to next minor).
 
 ## Installation
 
@@ -183,6 +183,8 @@ self.isEnabled =
     ?? false
 ```
 
+When the key is present but the value has the **wrong type**, decoding fails and the default is used (same as missing/`null`). If you need strict type checking on present keys, do not use `@Default` for that property.
+
 ## Custom `CodingKeys`
 
 Define your own enum when you need full control (e.g. several required fields with snake_case keys). The macro **does not** emit `CodingKeys` in that case; it only emits `init(from:)`.
@@ -280,7 +282,8 @@ CodableDefault/
 | `CodableDefault` | Library | `@CodableDefault`, `@Default` API |
 | `CodableDefaultMacros` | Macro / plugin | SwiftSyntax expansion |
 | `CodableDefaultClient` | Executable | Usage demo |
-| `CodableDefaultTests` | Tests | XCTest coverage |
+| `CodableDefaultTests` | Tests | Runtime decode/encode tests |
+| `CodableDefaultMacroTests` | Tests | Macro expansion tests |
 
 ## Development
 
@@ -313,6 +316,11 @@ swift run CodableDefaultClient
 - **No custom `encode(to:)`** generation — decoding-only customization.
 - **Default expressions** are pasted literally; they must be valid at the use site (e.g. capture surrounding generics correctly).
 - **User `CodingKeys`** must list every decodable stored property; partial enums are not merged automatically.
+- **Wrong JSON types** on `@Default` fields fall back to the default value instead of throwing.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Release history is in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

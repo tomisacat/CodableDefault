@@ -8,8 +8,17 @@ on:
 
 jobs:
   test:
-    name: Test (macOS)
-    runs-on: macos-15
+    name: Test (Xcode ${{ matrix.xcode-version }})
+    runs-on: ${{ matrix.macos-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - macos-version: macos-15
+            xcode-version: "26.0"
+          - macos-version: macos-15
+            xcode-version: latest-stable
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -17,7 +26,7 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "26.3"
+          xcode-version: ${{ matrix.xcode-version }}
 
       - name: Show toolchain
         run: |

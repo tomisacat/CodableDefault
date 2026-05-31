@@ -22,7 +22,10 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0-latest"),
+        .package(
+            url: "https://github.com/swiftlang/swift-syntax.git",
+            .upToNextMinor(from: "602.0.0")
+        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -47,6 +50,14 @@ let package = Package(
         .testTarget(
             name: "CodableDefaultTests",
             dependencies: ["CodableDefault"]
+        ),
+
+        .testTarget(
+            name: "CodableDefaultMacroTests",
+            dependencies: [
+                "CodableDefaultMacros",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+            ]
         ),
     ]
 )
