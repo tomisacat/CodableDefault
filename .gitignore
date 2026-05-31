@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+Packages/
+*.xcodeproj
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Xcode
+DerivedData/
+*.xcresult
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# SwiftPM / Xcode integration (user-specific)
+.swiftpm/configuration/registries.json
+.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.swiftpm/xcode/xcuserdata/
+
+# Credentials
+.netrc
+
+# Editor
+.idea/
+*.swp
+*~
