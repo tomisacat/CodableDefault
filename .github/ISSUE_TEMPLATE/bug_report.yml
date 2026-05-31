@@ -1,0 +1,68 @@
+name: Bug report
+description: Report something that is broken or does not work as documented.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please include enough detail to reproduce the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected instead.
+      placeholder: Decoding fails when a property is null, but @Default should apply...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal model, JSON payload, and code that triggers the issue.
+      placeholder: |
+        ```swift
+        @CodableDefault
+        struct Example: Codable { ... }
+        ```
+
+        ```json
+        { "key": null }
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Swift, Xcode, platform, and CodableDefault version (tag or commit).
+      placeholder: |
+        - CodableDefault: 1.0.0
+        - Swift: 6.2
+        - Xcode: 26.3
+        - Platform: macOS 15 / iOS 13 simulator
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error messages / logs
+      description: Compiler errors, runtime errors, or macro expansion output if available.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for duplicates.
+          required: true
+        - label: I can reproduce this with the latest release or `main`.
+          required: true

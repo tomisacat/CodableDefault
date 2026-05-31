@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & discussions
+    url: https://github.com/tomisacat/CodableDefault/discussions
+    about: Ask questions or share ideas that are not bug reports or feature requests.
