@@ -32,8 +32,8 @@ swift run CodableDefaultClient
 | `Sources/CodableDefault/` | Public macro declarations |
 | `Sources/CodableDefaultMacros/` | Macro implementations (compiler plugin) |
 | `Sources/CodableDefaultClient/` | Usage demo (not for app targets) |
-| `Tests/CodableDefaultTests/` | Runtime decode/encode tests |
-| `Tests/CodableDefaultMacroTests/` | Macro expansion tests |
+| `Tests/CodableDefaultTests/` | Runtime decode/encode tests (Swift Testing) |
+| `Tests/CodableDefaultMacroTests/` | Macro expansion tests (Swift Testing) |
 
 ## Running tests
 
@@ -45,7 +45,7 @@ In Xcode, use scheme **CodableDefault-Package** with destination **My Mac**. Tes
 
 ### Test types
 
-- **Runtime tests** (`CodableDefaultTests`) — verify JSON decoding and encoding behavior through the public API.
+- **Runtime tests** (`CodableDefaultTests`) — verify JSON decoding and encoding behavior through the public API (`@Test`, `#expect`).
 - **Macro expansion tests** (`CodableDefaultMacroTests`) — verify generated `CodingKeys` and `init(from:)` source via `assertMacroExpansion`.
 
 Add or update both when changing macro output or decode semantics.

@@ -1,24 +1,25 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+> All notable changes to this project are documented in this file.
+>
+> The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+> and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+
+## [1.1.0] - 2026-06-11
 
 ### Added
 
-- Macro expansion tests (`CodableDefaultMacroTests`) using `assertMacroExpansion`.
-- Runtime tests for `null` values, class decoding, encode/decode round-trip, and wrong-type fallback.
-- Dependabot configuration for GitHub Actions and Swift dependencies.
-- `CONTRIBUTING.md`, `CHANGELOG.md`, and `SECURITY.md`.
-- CI matrix across Xcode 26.0 and latest stable, with SwiftPM caching.
+- `@Default(_:transform:)` and `@Default(_:codingKey:transform:)` for optional post-decode `(T) throws -> T` transforms.
+- Macro expansion and runtime tests for transform behavior.
+- README documentation and demo client scenario for `transform:`.
 
 ### Changed
 
-- Pin `swift-syntax` with `.upToNextMinor(from: "602.0.0")`.
-- Document wrong-type fallback behavior in README.
+- Migrated `CodableDefaultTests` and `CodableDefaultMacroTests` from XCTest to Swift Testing.
+
+[1.1.0]: https://github.com/tomisacat/CodableDefault/releases/tag/1.1.0
 
 ## [1.0.0] - 2026-05-31
 

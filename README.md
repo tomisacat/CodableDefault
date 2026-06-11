@@ -161,6 +161,34 @@ var isEnabled: Bool
 var username: String
 ```
 
+### `@Default(_:transform:)` and `@Default(_:codingKey:transform:)`
+
+**Role:** Same as `@Default`, plus an optional post-decode `(T) throws -> T` transform applied to the resolved value — whether that value came from JSON or from the default fallback.
+
+```swift
+@Default(10, transform: { min($0, 100) })
+var retryCount: Int
+
+@Default("guest", transform: { $0.trimmingCharacters(in: .whitespaces) })
+var username: String
+
+@Default(0, codingKey: "limit", transform: { min($0, 100) })
+var limit: Int
+```
+
+Throwing transforms propagate out of `init(from:)`. Use this for validation, clamping, or normalization after the default-or-decode step.
+
+Defaulted properties with a transform expand to:
+
+```swift
+self.retryCount = try {
+    let __codableDefault_retryCount =
+        (try? container.decodeIfPresent(Int.self, forKey: .retryCount))
+        ?? 10
+    return try { min($0, 100) }(__codableDefault_retryCount)
+}()
+```
+
 ## How properties are decoded
 
 | Annotation | JSON key | When key absent | When value is `null` |
@@ -168,6 +196,8 @@ var username: String
 | *(none)* | Property name | **Throws** | **Throws** (for non-optional types) |
 | `@Default(value)` | Property name | Uses `value` | Uses `value` |
 | `@Default(value, codingKey: "key")` | `"key"` | Uses `value` | Uses `value` |
+| `@Default(value, transform: { … })` | Property name | Uses `transform(value)` | Uses `transform(value)` |
+| `@Default(value, codingKey: "key", transform: { … })` | `"key"` | Uses `transform(value)` | Uses `transform(value)` |
 
 Required properties use:
 
@@ -282,8 +312,8 @@ CodableDefault/
 | `CodableDefault` | Library | `@CodableDefault`, `@Default` API |
 | `CodableDefaultMacros` | Macro / plugin | SwiftSyntax expansion |
 | `CodableDefaultClient` | Executable | Usage demo |
-| `CodableDefaultTests` | Tests | Runtime decode/encode tests |
-| `CodableDefaultMacroTests` | Tests | Macro expansion tests |
+| `CodableDefaultTests` | Tests | Runtime decode/encode tests (Swift Testing) |
+| `CodableDefaultMacroTests` | Tests | Macro expansion tests (Swift Testing) |
 
 ## Development
 

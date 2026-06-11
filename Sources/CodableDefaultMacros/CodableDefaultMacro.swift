@@ -34,6 +34,8 @@ struct CodableDefaultPlugin: CompilerPlugin {
 /// Supported forms in client code:
 /// - `@Default(false)` — default value only; JSON key matches the property name.
 /// - `@Default("guest", codingKey: "user_name")` — default value plus a custom JSON key.
+/// - `@Default(10, transform: { min($0, 100) })` — default value plus a post-decode transform.
+/// - `@Default(0, codingKey: "limit", transform: { min($0, 100) })` — custom key and transform.
 public struct DefaultMacro: PeerMacro {
 
     /// Produces no peer declarations; decoding logic is emitted by `CodableDefaultMacro`.
@@ -72,6 +74,8 @@ public struct CodableDefaultMacro: MemberMacro {
         let jsonKey: String?
         /// `CodingKeys` case used in `forKey:` (usually the property name).
         let codingKeyCaseName: String
+        /// Source text of the `@Default` transform closure, if present.
+        let transformExpression: String?
     }
 
     /// A case parsed from a user-defined `CodingKeys` enum.
@@ -121,6 +125,7 @@ public struct CodableDefaultMacro: MemberMacro {
             let defaultAttribute = parseDefaultAttribute(from: varDecl.attributes)
             let defaultExpression = defaultAttribute?.defaultExpression
             let attributeJSONKey = defaultAttribute?.codingKey
+            let transformExpression = defaultAttribute?.transformExpression
 
             let codingKeyCaseName: String
             let jsonKey: String?
@@ -147,7 +152,8 @@ public struct CodableDefaultMacro: MemberMacro {
                     typeName: typeName,
                     defaultExpression: defaultExpression,
                     jsonKey: jsonKey,
-                    codingKeyCaseName: codingKeyCaseName
+                    codingKeyCaseName: codingKeyCaseName,
+                    transformExpression: transformExpression
                 )
             )
         }
@@ -201,10 +207,22 @@ public struct CodableDefaultMacro: MemberMacro {
     private static func decodeStatement(for property: PropertySpec) -> String {
         let key = property.codingKeyCaseName
         if let defaultExpression = property.defaultExpression {
+            let resolvedValue = """
+            (try? container.decodeIfPresent(\(property.typeName).self, forKey: .\(key)))
+                ?? \(defaultExpression)
+            """
+            if let transformExpression = property.transformExpression {
+                let tempName = "__codableDefault_\(property.name)"
+                return """
+                self.\(property.name) = try {
+                    let \(tempName) = \(resolvedValue)
+                    return try \(transformExpression)(\(tempName))
+                }()
+                """
+            }
             return """
             self.\(property.name) =
-                (try? container.decodeIfPresent(\(property.typeName).self, forKey: .\(key)))
-                ?? \(defaultExpression)
+                \(resolvedValue)
             """
         }
         return """
@@ -277,9 +295,11 @@ public struct CodableDefaultMacro: MemberMacro {
         let defaultExpression: String
         /// JSON key from `codingKey:` when using `@Default(_:codingKey:)`.
         let codingKey: String?
+        /// Source text of the `transform:` closure, if present.
+        let transformExpression: String?
     }
 
-    /// Reads `@Default` / `@Default(_:codingKey:)` from a property’s attribute list.
+    /// Reads `@Default` attributes from a property’s attribute list.
     ///
     /// - Parameter attributes: Attributes on a `var` declaration.
     /// - Returns: Parsed default and optional coding key, or `nil` if `@Default` is absent.
@@ -296,12 +316,19 @@ public struct CodableDefaultMacro: MemberMacro {
 
             var defaultExpression: String?
             var codingKey: String?
+            var transformExpression: String?
 
             for argument in arguments {
                 let label = argument.label?.text
 
                 if label == "codingKey" {
                     codingKey = stringLiteralValue(from: argument.expression)
+                    continue
+                }
+
+                if label == "transform" {
+                    transformExpression = argument.expression.description
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
                     continue
                 }
 
@@ -317,7 +344,8 @@ public struct CodableDefaultMacro: MemberMacro {
 
             return ParsedDefaultAttribute(
                 defaultExpression: defaultExpression,
-                codingKey: codingKey
+                codingKey: codingKey,
+                transformExpression: transformExpression
             )
         }
 

@@ -21,3 +21,17 @@ public macro Default<T>(_ value: T, codingKey: String) =
         module: "CodableDefaultMacros",
         type: "DefaultMacro"
     )
+
+@attached(peer)
+public macro Default<T>(_ value: T, transform: (T) throws -> T) =
+    #externalMacro(
+        module: "CodableDefaultMacros",
+        type: "DefaultMacro"
+    )
+
+@attached(peer)
+public macro Default<T>(_ value: T, codingKey: String, transform: (T) throws -> T) =
+    #externalMacro(
+        module: "CodableDefaultMacros",
+        type: "DefaultMacro"
+    )

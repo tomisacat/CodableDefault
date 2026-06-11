@@ -2,15 +2,15 @@
 import CodableDefaultMacros
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
-import XCTest
+import Testing
 
 private let testMacros: [String: Macro.Type] = [
     "CodableDefault": CodableDefaultMacro.self,
     "Default": DefaultMacro.self,
 ]
 
-final class CodableDefaultMacroTests: XCTestCase {
-    func testExpandsStructWithDefaultsAndRequiredProperties() throws {
+@Suite struct CodableDefaultMacroTests {
+    @Test func expandsStructWithDefaultsAndRequiredProperties() {
         assertMacroExpansion(
             """
             @CodableDefault
@@ -46,7 +46,7 @@ final class CodableDefaultMacroTests: XCTestCase {
         )
     }
 
-    func testExpandsCustomCodingKeyOnDefault() throws {
+    @Test func expandsCustomCodingKeyOnDefault() {
         assertMacroExpansion(
             """
             @CodableDefault
@@ -76,7 +76,7 @@ final class CodableDefaultMacroTests: XCTestCase {
         )
     }
 
-    func testExpandsClassWithRequiredInit() throws {
+    @Test func expandsClassWithRequiredInit() {
         assertMacroExpansion(
             """
             @CodableDefault
@@ -112,7 +112,7 @@ final class CodableDefaultMacroTests: XCTestCase {
         )
     }
 
-    func testSkipsCodingKeysWhenUserProvidesEnum() throws {
+    @Test func skipsCodingKeysWhenUserProvidesEnum() {
         assertMacroExpansion(
             """
             @CodableDefault
@@ -153,7 +153,7 @@ final class CodableDefaultMacroTests: XCTestCase {
         )
     }
 
-    func testDefaultMacroProducesNoPeers() throws {
+    @Test func defaultMacroProducesNoPeers() {
         assertMacroExpansion(
             """
             @Default(false)
@@ -165,13 +165,116 @@ final class CodableDefaultMacroTests: XCTestCase {
             macros: testMacros
         )
     }
+
+    @Test func expandsTransformOnDefault() {
+        assertMacroExpansion(
+            """
+            @CodableDefault
+            struct Config: Codable {
+                @Default(10, transform: { min($0, 100) })
+                var retryCount: Int
+            }
+            """,
+            expandedSource: """
+            struct Config: Codable {
+                var retryCount: Int
+
+                enum CodingKeys: String, CodingKey {
+                    case retryCount
+                }
+
+                init(from decoder: Decoder) throws {
+                    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+                    self.retryCount = try {
+                    let __codableDefault_retryCount = (try? container.decodeIfPresent(Int.self, forKey: .retryCount))
+                    ?? 10
+                    return try {
+                        min($0, 100)
+                    }(__codableDefault_retryCount)
+                    }()
+                }
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    @Test func expandsTransformWithCodingKey() {
+        assertMacroExpansion(
+            """
+            @CodableDefault
+            struct Config: Codable {
+                @Default(0, codingKey: "limit", transform: { min($0, 100) })
+                var limit: Int
+            }
+            """,
+            expandedSource: """
+            struct Config: Codable {
+                var limit: Int
+
+                enum CodingKeys: String, CodingKey {
+                    case limit = "limit"
+                }
+
+                init(from decoder: Decoder) throws {
+                    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+                    self.limit = try {
+                    let __codableDefault_limit = (try? container.decodeIfPresent(Int.self, forKey: .limit))
+                    ?? 0
+                    return try {
+                        min($0, 100)
+                    }(__codableDefault_limit)
+                    }()
+                }
+            }
+            """,
+            macros: testMacros
+        )
+    }
+
+    @Test func expandsMultiLineTransform() {
+        assertMacroExpansion(
+            """
+            @CodableDefault
+            struct Config: Codable {
+                @Default(10, transform: { value in
+                    min(value, 100)
+                })
+                var retryCount: Int
+            }
+            """,
+            expandedSource: """
+            struct Config: Codable {
+                var retryCount: Int
+
+                enum CodingKeys: String, CodingKey {
+                    case retryCount
+                }
+
+                init(from decoder: Decoder) throws {
+                    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+                    self.retryCount = try {
+                    let __codableDefault_retryCount = (try? container.decodeIfPresent(Int.self, forKey: .retryCount))
+                    ?? 10
+                    return try { value in
+                        min(value, 100)
+                    }(__codableDefault_retryCount)
+                    }()
+                }
+            }
+            """,
+            macros: testMacros
+        )
+    }
 }
 #else
-import XCTest
+import Testing
 
-final class CodableDefaultMacroTests: XCTestCase {
-    func testMacrosRequireHostPlatform() throws {
-        throw XCTSkip("Macro tests run on the macOS host only.")
-    }
+@Suite struct CodableDefaultMacroTests {
+    @Test(.disabled("Macro tests run on the macOS host only."))
+    func macrosRequireHostPlatform() {}
 }
 #endif

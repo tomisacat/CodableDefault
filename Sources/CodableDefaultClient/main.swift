@@ -72,6 +72,14 @@ final class Session: Codable {
     var isGuest: Bool
 }
 
+// MARK: - 6. Post-decode transform
+
+@CodableDefault
+struct RateLimitedConfig: Codable {
+    @Default(10, transform: { min($0, 100) })
+    var retryCount: Int
+}
+
 // MARK: - Demos
 
 func printHeader(_ title: String) {
@@ -171,7 +179,18 @@ try runDemo(
     print("→ isGuest:", session.isGuest)
 }
 
-// 9. Encode → decode round-trip (types with @CodableDefault use macro-generated init(from:))
+// 9. Post-decode transform (clamp decoded or default value)
+try runDemo("Transform clamps retry count", json: #"{"retryCount":150}"#) { data in
+    let config = try JSONDecoder().decode(RateLimitedConfig.self, from: data)
+    print("→ retryCount:", config.retryCount, "(clamped from 150)")
+}
+
+try runDemo("Transform clamps default path", json: "{}") { data in
+    let config = try JSONDecoder().decode(RateLimitedConfig.self, from: data)
+    print("→ retryCount:", config.retryCount, "(default 10, transform applied)")
+}
+
+// 10. Encode → decode round-trip (types with @CodableDefault use macro-generated init(from:))
 printHeader("Encode / decode round-trip")
 let seedJSON = """
 {
