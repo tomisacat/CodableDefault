@@ -1,10 +1,10 @@
 # CodableDefault
 
-Swift macros that make `Codable` decoding tolerant of missing or `null` JSON fields by applying compile-time default values, while leaving required properties strict. Custom JSON key names are supported via `@Default(_:codingKey:)` or a hand-written `CodingKeys` enum.
+Swift macros that make `Codable` decoding tolerant of missing or `null` JSON fields by applying compile-time default values, while leaving required properties strict. Use `@Default(_:transform:)` to clamp, normalize, or validate resolved values after decode. Custom JSON key names are supported via `@Default(_:codingKey:)` or a hand-written `CodingKeys` enum.
 
 ## Motivation
 
-API responses often omit keys or send `null` for optional configuration fields. With plain `Codable`, you typically need manual `init(from:)`, property wrappers, or post-decode merging. **CodableDefault** keeps models declarative: mark fields with `@Default`, attach `@CodableDefault` to the type, and the macro generates decoding logic for you.
+API responses often omit keys or send `null` for optional configuration fields. With plain `Codable`, you typically need manual `init(from:)`, property wrappers, or post-decode merging. **CodableDefault** keeps models declarative: mark fields with `@Default`, attach `@CodableDefault` to the type, and the macro generates decoding logic for you — including optional post-decode transforms when you need to shape or validate the final value.
 
 ## Requirements
 
@@ -105,13 +105,17 @@ struct Settings: Codable {
 
     @Default("guest", codingKey: "user_name")
     var username: String
+
+    @Default(10, codingKey: "retry", transform: { min($0, 100) })
+    var retryCount: Int
 }
 
-let json = #"{"name":"App"}"#.data(using: .utf8)!
+let json = #"{"name":"App","retry":150}"#.data(using: .utf8)!
 let settings = try JSONDecoder().decode(Settings.self, from: json)
 // settings.name == "App"
-// settings.isEnabled == false
-// settings.username == "guest"
+// settings.isEnabled == false      (default — key omitted)
+// settings.username == "guest"     (default — key omitted)
+// settings.retryCount == 100       (transform clamped 150 → 100)
 ```
 
 ## Macros
