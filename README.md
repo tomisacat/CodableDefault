@@ -1,5 +1,15 @@
 # CodableDefault
 
+<div align="center">
+
+[![CI](https://github.com/tomisacat/CodableDefault/actions/workflows/ci.yml/badge.svg)](https://github.com/tomisacat/CodableDefault/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tomisacat/CodableDefault)](https://github.com/tomisacat/CodableDefault/releases)
+[![Swift](https://img.shields.io/badge/Swift-6.2+-F05138?logo=swift&logoColor=white)](https://swift.org)
+[![Platforms](https://img.shields.io/badge/Platforms-iOS%2013%2B%20|%20macOS%2010.15%2B%20|%20watchOS%206%2B%20|%20tvOS%2013%2B%20|%20visionOS%201%2B-lightgrey)](Package.swift)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+</div>
+
 Swift macros that make `Codable` decoding tolerant of missing or `null` JSON fields by applying compile-time default values, while leaving required properties strict. Use `@Default(_:transform:)` to clamp, normalize, or validate resolved values after decode. Custom JSON key names are supported via `@Default(_:codingKey:)` or a hand-written `CodingKeys` enum.
 
 ## Motivation
@@ -14,8 +24,11 @@ API responses often omit keys or send `null` for optional configuration fields. 
 | Xcode | 16+ (recommended) |
 | iOS | 13+ |
 | macOS | 10.15+ (required to build and run macro tooling) |
+| watchOS | 6+ |
+| tvOS | 13+ |
+| visionOS | 1+ |
 
-Dependencies are pinned via [Package.resolved](Package.resolved) (`swift-syntax` 602.x, up to next minor).
+Dependencies are pinned via [Package.resolved](Package.resolved) (`swift-syntax` 603.x, up to next minor).
 
 ## Installation
 
@@ -25,7 +38,7 @@ Add the package to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/tomisacat/CodableDefault.git", from: "1.0.0"),
+    .package(url: "https://github.com/tomisacat/CodableDefault.git", from: "2.0.0"),
 ],
 targets: [
     .target(
@@ -45,7 +58,7 @@ targets: [
    ```
    https://github.com/tomisacat/CodableDefault.git
    ```
-4. Set the dependency rule (for example **Up to Next Major** from `1.0.0`), then click **Add Package**.
+4. Set the dependency rule (for example **Up to Next Major** from `2.0.0`), then click **Add Package**.
 5. When prompted, add the **CodableDefault** library product to the target that contains your `Codable` models (your app target or a framework target).
 6. In Swift files that use the macros, add:
 
@@ -185,13 +198,15 @@ Throwing transforms propagate out of `init(from:)`. Use this for validation, cla
 Defaulted properties with a transform expand to:
 
 ```swift
-self.retryCount = try {
+self.retryCount = {
     let __codableDefault_retryCount =
         (try? container.decodeIfPresent(Int.self, forKey: .retryCount))
         ?? 10
-    return try { min($0, 100) }(__codableDefault_retryCount)
+    return { min($0, 100) }(__codableDefault_retryCount)
 }()
 ```
+
+Non-throwing transforms omit `try`; throwing transforms wrap the assignment in `try { … }()`.
 
 ## How properties are decoded
 
@@ -293,6 +308,23 @@ The macros customize **decoding** only (`init(from:)`). For `struct` types that 
 
 Run `swift run CodableDefaultClient` for a round-trip encode/decode sample.
 
+### iOS demo app
+
+[`Examples/CodableDefaultDemo`](Examples/CodableDefaultDemo) is a SwiftUI app that walks through every major macro feature with sample JSON and live decode results.
+
+<p align="center">
+  <a href="Examples/CodableDefaultDemo">
+    <img src="docs/media/demo-screenshot.png" alt="CodableDefault iOS demo app showing Basics and Coding Keys scenarios" width="320">
+  </a>
+</p>
+
+```bash
+cd Examples/CodableDefaultDemo
+open CodableDefaultDemo.xcodeproj
+```
+
+Build and run on an iOS Simulator (iPhone 17 or later). The app groups **14 interactive scenarios** covering defaults, `null`, required fields, custom keys, user `CodingKeys`, classes, transforms, validation errors, and encode round-trips.
+
 ## Project layout
 
 ```
@@ -300,6 +332,8 @@ CodableDefault/
 ├── Package.swift                 # Swift 6.2 package manifest
 ├── Package.resolved              # Locked dependency versions
 ├── README.md
+├── Examples/
+│   └── CodableDefaultDemo/       # SwiftUI iOS demo app (local package dependency)
 ├── Sources/
 │   ├── CodableDefault/           # Public macro declarations
 │   │   └── CodableDefault.swift
@@ -341,6 +375,16 @@ Macro implementations compile for the **host** (macOS). In Xcode, run tests with
 swift run CodableDefaultClient
 ```
 
+### iOS demo app
+
+```bash
+cd Examples/CodableDefaultDemo
+xcodebuild build \
+  -project CodableDefaultDemo.xcodeproj \
+  -scheme CodableDefaultDemo \
+  -destination 'platform=iOS Simulator,name=iPhone 17'
+```
+
 ## Limitations
 
 - **Stored properties only** — must have an explicit type annotation (`var count: Int`).
@@ -354,7 +398,7 @@ swift run CodableDefaultClient
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Release history is in [CHANGELOG.md](CHANGELOG.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md). Release notes are in [docs/releases/](docs/releases/).
 
 ## License
 

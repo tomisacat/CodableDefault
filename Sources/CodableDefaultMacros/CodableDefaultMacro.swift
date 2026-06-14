@@ -76,6 +76,8 @@ public struct CodableDefaultMacro: MemberMacro {
         let codingKeyCaseName: String
         /// Source text of the `@Default` transform closure, if present.
         let transformExpression: String?
+        /// Whether the transform closure can throw (used to omit unnecessary `try` in generated code).
+        let transformCanThrow: Bool
     }
 
     /// A case parsed from a user-defined `CodingKeys` enum.
@@ -126,6 +128,7 @@ public struct CodableDefaultMacro: MemberMacro {
             let defaultExpression = defaultAttribute?.defaultExpression
             let attributeJSONKey = defaultAttribute?.codingKey
             let transformExpression = defaultAttribute?.transformExpression
+            let transformCanThrow = defaultAttribute?.transformCanThrow ?? false
 
             let codingKeyCaseName: String
             let jsonKey: String?
@@ -153,7 +156,8 @@ public struct CodableDefaultMacro: MemberMacro {
                     defaultExpression: defaultExpression,
                     jsonKey: jsonKey,
                     codingKeyCaseName: codingKeyCaseName,
-                    transformExpression: transformExpression
+                    transformExpression: transformExpression,
+                    transformCanThrow: transformCanThrow
                 )
             )
         }
@@ -213,10 +217,18 @@ public struct CodableDefaultMacro: MemberMacro {
             """
             if let transformExpression = property.transformExpression {
                 let tempName = "__codableDefault_\(property.name)"
+                if property.transformCanThrow {
+                    return """
+                    self.\(property.name) = try {
+                        let \(tempName) = \(resolvedValue)
+                        return try \(transformExpression)(\(tempName))
+                    }()
+                    """
+                }
                 return """
-                self.\(property.name) = try {
+                self.\(property.name) = {
                     let \(tempName) = \(resolvedValue)
-                    return try \(transformExpression)(\(tempName))
+                    return \(transformExpression)(\(tempName))
                 }()
                 """
             }
@@ -297,6 +309,8 @@ public struct CodableDefaultMacro: MemberMacro {
         let codingKey: String?
         /// Source text of the `transform:` closure, if present.
         let transformExpression: String?
+        /// Whether the transform closure can throw.
+        let transformCanThrow: Bool
     }
 
     /// Reads `@Default` attributes from a property’s attribute list.
@@ -317,6 +331,7 @@ public struct CodableDefaultMacro: MemberMacro {
             var defaultExpression: String?
             var codingKey: String?
             var transformExpression: String?
+            var transformCanThrow = false
 
             for argument in arguments {
                 let label = argument.label?.text
@@ -329,6 +344,7 @@ public struct CodableDefaultMacro: MemberMacro {
                 if label == "transform" {
                     transformExpression = argument.expression.description
                         .trimmingCharacters(in: .whitespacesAndNewlines)
+                    transformCanThrow = expressionCanThrow(argument.expression)
                     continue
                 }
 
@@ -345,7 +361,8 @@ public struct CodableDefaultMacro: MemberMacro {
             return ParsedDefaultAttribute(
                 defaultExpression: defaultExpression,
                 codingKey: codingKey,
-                transformExpression: transformExpression
+                transformExpression: transformExpression,
+                transformCanThrow: transformCanThrow
             )
         }
 
@@ -379,6 +396,43 @@ public struct CodableDefaultMacro: MemberMacro {
         let start = expression.index(after: expression.startIndex)
         let end = expression.index(before: expression.endIndex)
         return String(expression[start..<end])
+    }
+
+    /// Returns whether a transform expression may throw at runtime.
+    ///
+    /// Inline closures are analyzed for `throws` signatures and `throw` statements.
+    /// Other expressions (for example function references) are treated as potentially throwing.
+    private static func expressionCanThrow(_ expression: ExprSyntax) -> Bool {
+        guard let closure = expression.as(ClosureExprSyntax.self) else {
+            return true
+        }
+
+        if closure.signature?.effectSpecifiers?.throwsClause != nil {
+            return true
+        }
+
+        for statement in closure.statements {
+            if syntaxTreeContainsThrow(statement) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    /// Walks a syntax subtree looking for `throw` statements.
+    private static func syntaxTreeContainsThrow(_ syntax: some SyntaxProtocol) -> Bool {
+        if syntax.is(ThrowStmtSyntax.self) {
+            return true
+        }
+
+        for child in syntax.children(viewMode: .sourceAccurate) {
+            if syntaxTreeContainsThrow(child) {
+                return true
+            }
+        }
+
+        return false
     }
 }
 

@@ -5,6 +5,7 @@
 .build/
 Packages/
 *.xcodeproj
+!Examples/**/*.xcodeproj
 xcuserdata/
 *.xcscmblueprint
 *.xccheckout
@@ -28,5 +29,6 @@ DerivedData/
 
 # Editor
 .idea/
+.vscode/
 *.swp
 *~

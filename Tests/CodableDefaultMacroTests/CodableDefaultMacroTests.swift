@@ -186,10 +186,10 @@ private let testMacros: [String: Macro.Type] = [
                 init(from decoder: Decoder) throws {
                     let container = try decoder.container(keyedBy: CodingKeys.self)
 
-                    self.retryCount = try {
+                    self.retryCount = {
                     let __codableDefault_retryCount = (try? container.decodeIfPresent(Int.self, forKey: .retryCount))
                     ?? 10
-                    return try {
+                    return {
                         min($0, 100)
                     }(__codableDefault_retryCount)
                     }()
@@ -220,10 +220,10 @@ private let testMacros: [String: Macro.Type] = [
                 init(from decoder: Decoder) throws {
                     let container = try decoder.container(keyedBy: CodingKeys.self)
 
-                    self.limit = try {
+                    self.limit = {
                     let __codableDefault_limit = (try? container.decodeIfPresent(Int.self, forKey: .limit))
                     ?? 0
-                    return try {
+                    return {
                         min($0, 100)
                     }(__codableDefault_limit)
                     }()
@@ -256,10 +256,10 @@ private let testMacros: [String: Macro.Type] = [
                 init(from decoder: Decoder) throws {
                     let container = try decoder.container(keyedBy: CodingKeys.self)
 
-                    self.retryCount = try {
+                    self.retryCount = {
                     let __codableDefault_retryCount = (try? container.decodeIfPresent(Int.self, forKey: .retryCount))
                     ?? 10
-                    return try { value in
+                    return { value in
                         min(value, 100)
                     }(__codableDefault_retryCount)
                     }()

@@ -41,10 +41,10 @@ body:
       label: Environment
       description: Swift, Xcode, platform, and CodableDefault version (tag or commit).
       placeholder: |
-        - CodableDefault: 1.0.0
+        - CodableDefault: 2.0.0
         - Swift: 6.2
-        - Xcode: 26.3
-        - Platform: macOS 15 / iOS 13 simulator
+        - Xcode: 26.0
+        - Platform: macOS 15 / iOS 17 simulator / watchOS 11 / tvOS 18 / visionOS 2
     validations:
       required: true
 

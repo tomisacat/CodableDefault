@@ -9,6 +9,9 @@ let package = Package(
     platforms: [
         .iOS(.v13),
         .macOS(.v10_15),
+        .watchOS(.v6),
+        .tvOS(.v13),
+        .visionOS(.v1),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -24,7 +27,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/swiftlang/swift-syntax.git",
-            .upToNextMinor(from: "602.0.0")
+            .upToNextMajor(from: "603.0.2")
         ),
     ],
     targets: [
@@ -49,13 +52,24 @@ let package = Package(
 
         .testTarget(
             name: "CodableDefaultTests",
-            dependencies: ["CodableDefault"]
+            dependencies: [
+                "CodableDefault",
+                "CodableDefaultMacros",
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+            ]
         ),
 
         .testTarget(
             name: "CodableDefaultMacroTests",
             dependencies: [
                 "CodableDefaultMacros",
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
