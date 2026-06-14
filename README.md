@@ -3,7 +3,7 @@
 <div align="center">
 
 [![CI](https://github.com/tomisacat/CodableDefault/actions/workflows/ci.yml/badge.svg)](https://github.com/tomisacat/CodableDefault/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/tomisacat/CodableDefault)](https://github.com/tomisacat/CodableDefault/releases)
+[![Release](https://img.shields.io/github/v/release/tomisacat/CodableDefault)](https://github.com/tomisacat/CodableDefault/releases/latest)
 [![Swift](https://img.shields.io/badge/Swift-6.2+-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%2013%2B%20|%20macOS%2010.15%2B%20|%20watchOS%206%2B%20|%20tvOS%2013%2B%20|%20visionOS%201%2B-lightgrey)](Package.swift)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
